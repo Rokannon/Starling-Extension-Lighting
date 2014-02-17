@@ -1,10 +1,10 @@
 package starling.extensions.lighting.core
 {
-	import starling.utils.MatrixUtil;
-	import starling.display.DisplayObject;
-
 	import flash.geom.Matrix;
 	import flash.geom.Point;
+	
+	import starling.display.DisplayObject;
+	import starling.utils.MatrixUtil;
 
 	/**
 	 * @author Szenia Zadvornykh
@@ -15,6 +15,8 @@ package starling.extensions.lighting.core
 		
 		protected static var start:Point = new Point();
 		protected static var end:Point = new Point();
+		
+		private static const HELPER_MATRIX:Matrix = new Matrix();
 		
 		private var _modelEdges:Vector.<Edge>;
 		private var _worldEdges:Vector.<Edge>;
@@ -54,7 +56,7 @@ package starling.extensions.lighting.core
 		
 		final public function transform():void
 		{
-			var matrix:Matrix;
+			var matrix:Matrix = HELPER_MATRIX;
 			var length:int = _modelEdges.length;
 			var modelEdge:Edge, worldEdge:Edge;
 			
