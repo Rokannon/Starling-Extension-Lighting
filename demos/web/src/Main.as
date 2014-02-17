@@ -4,10 +4,9 @@
 	import flash.display.StageAlign;
 	import flash.display.StageScaleMode;
 	import flash.display3D.Context3DRenderMode;
-	import flash.display3D.Context3DProfile;
 	import flash.events.Event;
 	import flash.system.Capabilities;
-
+	
 	import starling.core.Starling;
 	
 	[SWF(width="800",height="600",backgroundColor="#000000",frameRate="60")]
