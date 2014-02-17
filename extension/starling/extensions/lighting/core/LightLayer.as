@@ -42,6 +42,9 @@ package starling.extensions.lighting.core
   public class LightLayer extends DisplayObject
   {
     public static var Program:String = "";
+	
+	public var sourceFactor:String;
+	public var destinationFactor:String;
     
     private const VERTICES_PER_EDGE:uint = 4;
     private const INDICES_PER_EDGE:uint = 6;
@@ -119,6 +122,9 @@ package starling.extensions.lighting.core
       setAmbientLightColor(ambientColor, ambientColorIntensity);
       
       touchable = false;
+	  
+	  sourceFactor = Context3DBlendFactor.DESTINATION_COLOR;
+	  destinationFactor = Context3DBlendFactor.ZERO;
     }
     
     private function createScene():void
@@ -436,7 +442,7 @@ package starling.extensions.lighting.core
       context.setScissorRectangle(null);
       
       sceneShader.activate(context);
-      context.setBlendFactors(Context3DBlendFactor.DESTINATION_COLOR, Context3DBlendFactor.ZERO);
+      context.setBlendFactors(sourceFactor, destinationFactor);
       context.drawTriangles(sceneIndexBuffer);
       
       support.raiseDrawCount(3);
