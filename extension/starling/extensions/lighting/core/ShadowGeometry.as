@@ -11,6 +11,8 @@ package starling.extensions.lighting.core
 	 */
 	public class ShadowGeometry
 	{
+		public var selfShadow:Boolean = false;
+		
 		protected static var start:Point = new Point();
 		protected static var end:Point = new Point();
 		
@@ -19,8 +21,6 @@ package starling.extensions.lighting.core
 		
 		private var _displayObject:DisplayObject;
 		
-		private var _transformMatrix:Matrix;
-		
 		/**
 		 * abstract baseclass to hold geometry used for shadow casting
 		 * do NOT use this class, instead use QuadShadowGeometry, PolygonShadowGeometry or your own implementation
@@ -28,8 +28,6 @@ package starling.extensions.lighting.core
 		public function ShadowGeometry(displayObject:DisplayObject)
 		{
 			_displayObject = displayObject;
-			
-			_transformMatrix = new Matrix();
 			
 			_modelEdges = createEdges();
 			_worldEdges = new <Edge>[];
@@ -56,13 +54,11 @@ package starling.extensions.lighting.core
 		
 		final public function transform():void
 		{
-			var matrix:Matrix = _transformMatrix;
+			var matrix:Matrix;
 			var length:int = _modelEdges.length;
 			var modelEdge:Edge, worldEdge:Edge;
-
-			matrix.identity();
 			
-			MatrixUtil.prependMatrix(matrix, _displayObject.transformationMatrix);
+			matrix.copyFrom(_displayObject.transformationMatrix);
 			
 			for (var i:int = length-1; i >=0; i--)
 			{
@@ -91,7 +87,6 @@ package starling.extensions.lighting.core
 			_displayObject = null;
 			_modelEdges = null;
 			_worldEdges = null;
-			_transformMatrix = null;
 		}
 	}
 }

@@ -14,25 +14,24 @@ package starling.extensions.lighting.core
   import flash.display3D.IndexBuffer3D;
   import flash.display3D.VertexBuffer3D;
   import flash.display3D.textures.Texture;
-  import flash.geom.Rectangle;
   import flash.geom.Point;
+  import flash.geom.Rectangle;
   
   import starling.core.RenderSupport;
   import starling.core.Starling;
   import starling.display.DisplayObject;
+  import starling.extensions.lighting.lights.DirectionalLight;
   import starling.extensions.lighting.lights.PointLight;
+  import starling.extensions.lighting.lights.SpotLight;
+  import starling.extensions.lighting.shaders.DirectionalLightShader;
+  import starling.extensions.lighting.shaders.DirectionalLightShadowShader;
+  import starling.extensions.lighting.shaders.GaussianBlurShader;
   import starling.extensions.lighting.shaders.LightMapShader;
   import starling.extensions.lighting.shaders.PointLightShader;
   import starling.extensions.lighting.shaders.PositionalLightShadowShader;
+  import starling.extensions.lighting.shaders.SpotLightShader;
   import starling.utils.Color;
   import starling.utils.getNextPowerOfTwo;
-  
-  import starling.extensions.lighting.shaders.GaussianBlurShader;
-  import starling.extensions.lighting.shaders.SpotLightShader;
-  import starling.extensions.lighting.lights.SpotLight;
-  import starling.extensions.lighting.shaders.DirectionalLightShadowShader;
-  import starling.extensions.lighting.lights.DirectionalLight;
-  import starling.extensions.lighting.shaders.DirectionalLightShader;
   
   /**
    * @author Szenia Zadvornykh
@@ -175,7 +174,8 @@ package starling.extensions.lighting.core
      * @param geometry subclass of ShadowGeometry wrapped around a Starling display object.
      */
     public function addShadowGeometry(geometry:ShadowGeometry):void {
-      this.geometry.push(geometry);
+		var index:int = this.geometry.indexOf(geometry);
+		if (index == -1) this.geometry.push(geometry);
     }
     
     /**
@@ -203,8 +203,8 @@ package starling.extensions.lighting.core
      */
     public function removeShadowGeometry(geometry:ShadowGeometry):void
     {
-      this.geometry.splice(this.geometry.indexOf(geometry), 1);
-      geometry.dispose();
+		var index:int = this.geometry.indexOf(geometry);
+		if (index != -1) this.geometry.splice(this.geometry.indexOf(geometry), 1);
     }
     
     /**
@@ -222,7 +222,8 @@ package starling.extensions.lighting.core
      */
     public function removeLight(light:LightBase):void
     {
-      lights.splice(lights.indexOf(light), 1);
+		var index:int = lights.indexOf(light);
+		lights.splice(index, 1);
     }
     
     /**
@@ -283,6 +284,7 @@ package starling.extensions.lighting.core
       var edges:Vector.<Edge>, edge:Edge;
       var indexOffset:uint = 0, index:uint;
       var needsNewBuffer:Boolean;
+	  var selfShadow:int;
       
       var verticesCount:int = 0;
       var indicesCount:int = 0;
@@ -295,6 +297,7 @@ package starling.extensions.lighting.core
       for (var i:int = length; i >= 0; i--)
       {
         shadowGeometry = geometry[i];
+		selfShadow = int(shadowGeometry.selfShadow);
         
         if (shadowGeometry)
         {
@@ -311,16 +314,16 @@ package starling.extensions.lighting.core
             
             vertices[verticesCount++] = edge.startX;
             vertices[verticesCount++] = edge.startY;
-            vertices[verticesCount++] = 1;
+            vertices[verticesCount++] = selfShadow;
             vertices[verticesCount++] = edge.endX;
             vertices[verticesCount++] = edge.endY;
-            vertices[verticesCount++] = 1;
+            vertices[verticesCount++] = selfShadow;
             vertices[verticesCount++] = edge.endX;
             vertices[verticesCount++] = edge.endY;
-            vertices[verticesCount++] = 0;
+            vertices[verticesCount++] = 1 - selfShadow;
             vertices[verticesCount++] = edge.startX;
             vertices[verticesCount++] = edge.startY;
-            vertices[verticesCount++] = 0;
+            vertices[verticesCount++] = 1 - selfShadow;
             
             indices[indicesCount++] = index;
             indices[indicesCount++] = index + 2;
