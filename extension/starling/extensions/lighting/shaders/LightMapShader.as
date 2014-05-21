@@ -72,7 +72,7 @@ package starling.extensions.lighting.shaders
 		{
 			var program:String =
 				
-				"tex ft0, v0.xy, fs0<2d, nearest, mipnone> \n" + "add oc, ft0, fc0";
+				"tex ft0, v0.xy, fs0<2d, linear, mipnone> \n" + "add oc, ft0, fc0";
 			
 			return program;
 		}
