@@ -30,6 +30,12 @@ package starling.extensions.lighting.shaders
             _ambientColor = new Vector.<Number>(4);
         }
 
+        public function setScale(scaleW:Number, scaleH:Number):void
+        {
+            vertexParams[0] = scaleW;
+            vertexParams[1] = scaleH;
+        }
+
         public function setDependencies(texture:Texture, vertexBuffer:VertexBuffer3D, uvBuffer:VertexBuffer3D):void
         {
             _texture = texture;

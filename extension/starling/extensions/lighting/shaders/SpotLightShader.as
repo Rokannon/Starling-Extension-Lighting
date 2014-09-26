@@ -12,6 +12,8 @@ package starling.extensions.lighting.shaders
      */
     public class SpotLightShader extends StarlingShaderBase
     {
+        public var texScale:Number;
+
         private const NAME:String = "SpotLightShader";
 
         private var params:Vector.<Number>;
@@ -40,10 +42,10 @@ package starling.extensions.lighting.shaders
 
         public function set light(light:SpotLight):void
         {
-            params[0] = light.x;
-            params[1] = light.y;
-            params[6] = light.focus;
-            params[7] = light.radius;
+            params[0] = light.x * texScale;
+            params[1] = light.y * texScale;
+            params[6] = light.focus * texScale;
+            params[7] = light.radius * texScale;
             params[8] = light.red;
             params[9] = light.green;
             params[10] = light.blue;

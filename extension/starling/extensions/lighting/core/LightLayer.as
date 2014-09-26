@@ -84,6 +84,8 @@ package starling.extensions.lighting.core
         private var _projectionMatrix:PerspectiveMatrix3D;
         private var _contextVertexVector:Vector.<Number> = new <Number>[0, 1, 10000, 0];
         private var _contextFragmentVector:Vector.<Number> = new <Number>[1, 1, 1, 1];
+        private var _texSize:int;
+        private var _texScale:Number;
 
         /**
          * v0.1
@@ -102,13 +104,11 @@ package starling.extensions.lighting.core
          * @param ambientColorIntencity intencity of the ambient light. Values range from 0 to 1
          * @param shadowSoftness control how soft the shadow eges are. Minimum of 1
          */
-        public function LightLayer(width:int, height:int, ambientColor:uint = 0x000000,
+        public function LightLayer(width:int, height:int, texSize:int, ambientColor:uint = 0x000000,
                                    ambientColorIntensity:Number = 1, shadowSoftness:Number = 1)
         {
-            _width = width;
-            _height = height;
+            _texSize = texSize;
             _shadowSoftness = shadowSoftness;
-            _scissorRectangle.setTo(0, 0, _width, _height);
 
             lights = new <LightBase>[];
             geometry = new <ShadowGeometry>[];
@@ -122,6 +122,19 @@ package starling.extensions.lighting.core
 
             sourceFactor = Context3DBlendFactor.DESTINATION_COLOR;
             destinationFactor = Context3DBlendFactor.ZERO;
+
+            setSize(width, height);
+        }
+
+        public function setSize(width:int, height:int):void
+        {
+            _width = width;
+            _height = height;
+            _scissorRectangle.setTo(0, 0, _width, _height);
+            var scaleW:Number = _width > _height ? 1.0 : (_width / _height);
+            var scaleH:Number = _width > _height ? (_height / _width) : 1.0;
+            sceneShader.setScale(scaleW, scaleH);
+            _texScale = _texSize / Math.max(_width, _height);
         }
 
         private function createScene():void
@@ -135,8 +148,7 @@ package starling.extensions.lighting.core
             sceneIndexBuffer = context.createIndexBuffer(6);
             sceneIndexBuffer.uploadFromVector(Vector.<uint>([0, 2, 1, 0, 3, 2]), 0, 6);
 
-            legalWidth = getNextPowerOfTwo(_width);
-            legalHeight = getNextPowerOfTwo(_height);
+            legalWidth = legalHeight = getNextPowerOfTwo(_texSize);
 
             lightMapIn = context.createTexture(legalWidth, legalHeight, Context3DTextureFormat.BGRA, true);
             lightMapOut = context.createTexture(legalWidth, legalHeight, Context3DTextureFormat.BGRA, true);
@@ -163,7 +175,7 @@ package starling.extensions.lighting.core
             blurShader = new GaussianBlurShader(legalWidth, legalHeight, _shadowSoftness >= 1 ? _shadowSoftness : 0);
             blurShader.setDependencies(lightMapIn, lightMapOut, sceneVertexBuffer, sceneUVBuffer);
 
-            sceneShader = new LightMapShader(_width / legalWidth, _height / legalHeight);
+            sceneShader = new LightMapShader(0, 0);
             sceneShader.setDependencies(lightMapOut, sceneVertexBuffer, sceneUVBuffer);
         }
 
@@ -317,17 +329,17 @@ package starling.extensions.lighting.core
                         index = j * VERTICES_PER_EDGE + indexOffset;
                         edge = edges[j];
 
-                        vertices[verticesCount++] = edge.startX;
-                        vertices[verticesCount++] = edge.startY;
+                        vertices[verticesCount++] = edge.startX * _texScale;
+                        vertices[verticesCount++] = edge.startY * _texScale;
                         vertices[verticesCount++] = selfShadow;
-                        vertices[verticesCount++] = edge.endX;
-                        vertices[verticesCount++] = edge.endY;
+                        vertices[verticesCount++] = edge.endX * _texScale;
+                        vertices[verticesCount++] = edge.endY * _texScale;
                         vertices[verticesCount++] = selfShadow;
-                        vertices[verticesCount++] = edge.endX;
-                        vertices[verticesCount++] = edge.endY;
+                        vertices[verticesCount++] = edge.endX * _texScale;
+                        vertices[verticesCount++] = edge.endY * _texScale;
                         vertices[verticesCount++] = 1 - selfShadow;
-                        vertices[verticesCount++] = edge.startX;
-                        vertices[verticesCount++] = edge.startY;
+                        vertices[verticesCount++] = edge.startX * _texScale;
+                        vertices[verticesCount++] = edge.startY * _texScale;
                         vertices[verticesCount++] = 1 - selfShadow;
 
                         indices[indicesCount++] = index;
@@ -390,8 +402,8 @@ package starling.extensions.lighting.core
             switch (true)
             {
                 case light is PointLight:
-                    pointLightShadowShader.setDependencies(geometryVertexBuffer, PointLight(light).x,
-                                                           PointLight(light).y);
+                    pointLightShadowShader.setDependencies(geometryVertexBuffer, PointLight(light).x * _texScale,
+                                                           PointLight(light).y * _texScale);
                     pointLightShadowShader.activate(context);
                     break;
                 case light is DirectionalLight:
@@ -399,8 +411,8 @@ package starling.extensions.lighting.core
                     directionalLightShadowShader.activate(context);
                     break;
                 case light is SpotLight:
-                    pointLightShadowShader.setDependencies(geometryVertexBuffer, SpotLight(light).x,
-                                                           SpotLight(light).y);
+                    pointLightShadowShader.setDependencies(geometryVertexBuffer, SpotLight(light).x * _texScale,
+                                                           SpotLight(light).y * _texScale);
                     pointLightShadowShader.activate(context);
                     break;
                 default:
@@ -421,14 +433,17 @@ package starling.extensions.lighting.core
             switch (true)
             {
                 case light is PointLight:
+                    pointLightShader.texScale = _texScale;
                     pointLightShader.light = light as PointLight;
                     pointLightShader.activate(context);
                     break;
                 case light is DirectionalLight:
+
                     directionalLightShader.light = light as DirectionalLight;
                     directionalLightShader.activate(context);
                     break;
                 case light is SpotLight:
+                    spotLightShader.texScale = _texScale;
                     spotLightShader.light = light as SpotLight;
                     spotLightShader.activate(context);
                     break;
